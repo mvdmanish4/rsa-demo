@@ -1,0 +1,141 @@
+// Create container
+const widgetContainer = document.createElement('div');
+widgetContainer.id = 'app-chat-container';
+widgetContainer.style.position = 'fixed';
+widgetContainer.style.bottom = '20px';
+widgetContainer.style.left = '50%';
+widgetContainer.style.transform = 'translateX(-50%)';
+widgetContainer.style.zIndex = '999999';
+widgetContainer.style.width = '90%';
+widgetContainer.style.maxWidth = '600px';
+widgetContainer.style.height = '56px';
+widgetContainer.style.transition = 'all 0.3s ease';
+widgetContainer.style.overflow = 'hidden';
+widgetContainer.style.backgroundColor = '#FFFFFF';
+widgetContainer.style.borderRadius = '9999px';
+widgetContainer.style.border = '1px solid #E5E7EB';
+widgetContainer.style.padding = '0';
+widgetContainer.style.boxShadow = '0px 10px 30px rgba(0, 0, 0, 0.3)';
+
+// Create iframe
+const chatIframe = document.createElement('iframe');
+chatIframe.src = 'http://localhost:5186/';
+chatIframe.style.width = '100%';
+chatIframe.style.height = '100%';
+chatIframe.style.border = 'none';
+chatIframe.style.padding = '0';
+chatIframe.style.margin = '0';
+chatIframe.style.display = 'block';
+chatIframe.style.backgroundColor = 'transparent';
+chatIframe.style.overflow = 'hidden';
+chatIframe.scrolling = 'no';
+chatIframe.style.borderRadius = 'inherit';
+chatIframe.allow = 'autoplay; clipboard-write; encrypted-media; web-share';
+chatIframe.style.boxShadow = '0px 10px 30px rgba(0, 0, 0, 0.25)';
+
+// Initialize state
+let isExpanded = false;
+let backdrop = null;
+
+// Handle resize
+function handleResize() {
+    const isMobile = window.innerWidth <= 768;
+
+    if (!isExpanded) {
+        widgetContainer.style.width = '90%';
+        widgetContainer.style.maxWidth = '600px';
+        widgetContainer.style.height = '56px';
+        widgetContainer.style.borderRadius = '9999px';
+    } else {
+        widgetContainer.style.width = isMobile ? '100%' : '95%';
+        widgetContainer.style.height = isMobile ? '100vh' : '95vh';
+        widgetContainer.style.maxWidth = '1200px';
+        widgetContainer.style.maxHeight = '800px';
+
+        if (isMobile) {
+            widgetContainer.style.bottom = '0';
+            widgetContainer.style.transform = 'translateX(-50%)';
+            widgetContainer.style.borderRadius = '16px 16px 0 0';
+        } else {
+            widgetContainer.style.bottom = '50%';
+            widgetContainer.style.transform = 'translate(-50%, 50%)';
+            widgetContainer.style.borderRadius = '16px';
+        }
+    }
+}
+
+// Add event listeners
+window.addEventListener('resize', handleResize);
+
+window.addEventListener('message', function(event) {
+    if (event.data.type === 'expand' && !isExpanded) {
+        isExpanded = true;
+        const isMobile = window.innerWidth <= 768;
+
+        widgetContainer.style.width = isMobile ? '100%' : '95%';
+        widgetContainer.style.height = isMobile ? '100vh' : '95vh';
+        widgetContainer.style.maxWidth = '1200px';
+        widgetContainer.style.maxHeight = '800px';
+        widgetContainer.style.border = 'none';
+        widgetContainer.style.backgroundColor = '#FFFFFF';
+
+        if (isMobile) {
+            widgetContainer.style.bottom = '0';
+            widgetContainer.style.transform = 'translateX(-50%)';
+            widgetContainer.style.borderRadius = '16px 16px 0 0';
+        } else {
+            widgetContainer.style.bottom = '50%';
+            widgetContainer.style.transform = 'translate(-50%, 50%)';
+            widgetContainer.style.borderRadius = '16px';
+        }
+
+        chatIframe.style.borderRadius = '16px';
+        chatIframe.scrolling = 'auto';
+        
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.id = 'chat-backdrop';
+            backdrop.style.position = 'fixed';
+            backdrop.style.top = '0';
+            backdrop.style.left = '0';
+            backdrop.style.width = '100%';
+            backdrop.style.height = '100%';
+            backdrop.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            backdrop.style.zIndex = '999998';
+            document.body.appendChild(backdrop);
+        }
+    } else if (event.data.type === 'collapse' && isExpanded) {
+        isExpanded = false;
+
+        widgetContainer.style.width = '90%';
+        widgetContainer.style.maxWidth = '600px';
+        widgetContainer.style.height = '56px';
+        widgetContainer.style.bottom = '20px';
+        widgetContainer.style.transform = 'translateX(-50%)';
+        widgetContainer.style.overflow = 'hidden';
+        widgetContainer.style.borderRadius = '9999px';
+        widgetContainer.style.border = '1px solid #E5E7EB';
+
+        chatIframe.style.borderRadius = '9999px';
+        chatIframe.scrolling = 'no';
+
+        if (backdrop) {
+            backdrop.remove();
+            backdrop = null;
+        }
+    }
+});
+
+// Initialize
+handleResize();
+widgetContainer.appendChild(chatIframe);
+document.body.appendChild(widgetContainer);
+
+// Add cleanup function to window for manual removal if needed
+window.removeChatWidget = function() {
+    window.removeEventListener('resize', handleResize);
+    if (backdrop) {
+        backdrop.remove();
+    }
+    widgetContainer.remove();
+};
